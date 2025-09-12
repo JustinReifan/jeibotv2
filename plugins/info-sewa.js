@@ -33,7 +33,7 @@ let handler = async (m, { conn, text, args, command, usedPrefix }) => {
     return imageMessage;
   };
 
-  const thumbnail = await image("./level.jpg");
+  const thumbnail = await image("./media/logojei.jpg");
   const isSewa = command === "sewabot";
   const listData = isSewa ? sewaList : premiumList;
   const title = isSewa ? "Layanan" : "PREMIUM BOT MATS.TOREE";

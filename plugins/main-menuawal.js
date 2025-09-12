@@ -30,18 +30,15 @@ let handler = async (m, { conn, usedPrefix: _p, args }) => {
       ? getRemainingTime(userData.premiumTime - Date.now())
       : "-";
 
-    const { tanggal, waktu } = waktuMakassar();
+    const { tanggal, waktu } = waktuJakarta();
 
     let menuUser = `
 ┏━━ ⪩  *INFO PENGGUNA*  ⪨
 ┃ ⬡ Nama    : ${nama}
 ┃ ⬡ Status  : ${status}
-┃ ⬡ Exp     : ${exp}
 ┃ ⬡ Koin    : ${koin}
 ┃ ⬡ Limit   : ${limit}
 ┃ ⬡ Premium : ${sisaPremium}
-┃ ⬡ Tanggal : ${tanggal}
-┃ ⬡ Waktu   : ${waktu} WITA
 ┗━━━━━━━━━━━━━━━⟢
 `.trim();
 
@@ -101,8 +98,7 @@ ${commands || "Belum ada perintah."}
         await conn.sendMessage(
           m.chat,
           {
-            image: { url: global.fotonya },
-            caption: `${ucapan()} @${senderNum}
+            text: `${ucapan()} @${senderNum}
 
 ${menuContent}`,
             mentions: [m.sender],
@@ -123,14 +119,12 @@ ${menuContent}`,
     let mainMenu = `
 ${ucapan()} @${senderNum}
 
-Aku *${
-      global.namebot
-    }*, asisten WhatsApp yang siap membantumu mengakses berbagai fitur secara otomatis dan praktis.
-
 ${menuUser}
 
 🧭 *Navigasi Menu*
 Tekan tombol *Pilih Kategori* di bawah ini.
+
+_${global.namebot} V2.0_
 `.trim();
 
     const categoryKeys = Object.keys(categories)
@@ -148,15 +142,28 @@ Tekan tombol *Pilih Kategori* di bawah ini.
       };
     });
 
-    console.log(rows);
+    const suntikRow = [
+      {
+        title: "Daftar Harga",
+        description: "Cek daftar harga layanan suntik",
+        id: `${_p}pricelist`,
+      },
+      {
+        title: "Cek Transaksi",
+        description: "Cek status pesanan suntik anda",
+        id: `${_p}ceksuntik`,
+      },
+    ];
 
-    const sections = [{ title: "Kategori Tersedia", rows }];
+    const sections = [
+      { title: "Flashsale Suntik Followers", rows: suntikRow },
+      { title: "Fitur Bot", rows },
+    ];
 
     await conn.sendMessage(
       m.chat,
       {
-        image: { url: global.fotonya },
-        caption: mainMenu,
+        text: mainMenu,
         mentions: [m.sender],
         buttons: [
           {
@@ -196,22 +203,22 @@ function getRemainingTime(ms) {
   const parts = [];
   if (d) parts.push(`${d} hari`);
   if (h) parts.push(`${h} jam`);
-  if (m) parts.push(`${m} menit`);
-  if (s || parts.length === 0) parts.push(`${s} detik`);
+  // if (m) parts.push(`${m} menit`);
+  // if (s || parts.length === 0) parts.push(`${s} detik`);
   return parts.join(" ");
 }
 
-function waktuMakassar() {
+function waktuJakarta() {
   const now = new Date();
   const tanggal = new Intl.DateTimeFormat("id-ID", {
-    timeZone: "Asia/Makassar",
+    timeZone: "Asia/Jakarta",
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   }).format(now);
   const waktu = new Intl.DateTimeFormat("id-ID", {
-    timeZone: "Asia/Makassar",
+    timeZone: "Asia/Jakarta",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -223,13 +230,13 @@ function waktuMakassar() {
 function ucapan() {
   const hour = Number(
     new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Makassar",
+      timeZone: "Asia/Jakarta",
       hour: "2-digit",
       hour12: false,
     }).format(new Date())
   );
-  if (hour >= 4 && hour < 10) return "Selamat pagi 🌄";
-  if (hour >= 10 && hour < 15) return "Selamat siang ☀️";
-  if (hour >= 15 && hour < 18) return "Selamat sore 🌇";
+  if (hour >= 4 && hour < 10) return "Pagi";
+  if (hour >= 10 && hour < 15) return "Siang";
+  if (hour >= 15 && hour < 18) return "Sore";
   return "Selamat malam 🌙";
 }
