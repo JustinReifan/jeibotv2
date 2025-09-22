@@ -155,9 +155,28 @@ _${global.namebot} V2.0_
       },
     ];
 
+    const sewaRow = [
+      {
+        title: "Coba gratis 7 hari",
+        description: "Coba Jei bot gratis selama 7 hari di grup anda",
+        id: `${_p}cobagratis`,
+      },
+      {
+        title: "Apa itu credit?",
+        description: "Info tentang sistem credit",
+        id: `${_p}info-credit`,
+      },
+      {
+        title: "Sewa bot",
+        description: "Info paket sewa bot",
+        id: `${_p}sewabot`,
+      },
+    ];
+
     const sections = [
       { title: "Flashsale Suntik Followers", rows: suntikRow },
       { title: "Fitur Bot", rows },
+      { title: "Info Jei Bot", rows: sewaRow },
     ];
 
     await conn.sendMessage(

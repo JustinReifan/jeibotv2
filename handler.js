@@ -4,12 +4,7 @@ import { fileURLToPath } from "url";
 import path, { join } from "path";
 import { unwatchFile, watchFile } from "fs";
 import chalk from "chalk";
-import fs from "fs";
-import fetch from "node-fetch";
 import moment from "moment-timezone";
-import knights from "knights-canvas";
-import canvafy from "canvafy";
-import { drawCard, LinearGradient } from "discord-welcome-card";
 /**
  * @type {import('@adiwajshing/baileys')}
  */
@@ -617,55 +612,10 @@ export async function participantsUpdate({ id, participants, action }) {
               : chat.sBye || this.bye || conn.bye || "Bye, @user!"
           ).replace(/@user/gi, tag);
 
-          let wel = await drawCard({
-            theme: "code",
-            text: {
-              title: await this.getName(id),
-              text: await this.getName(user),
-              subtitle: `Anggota ke-${groupMetadata.participants.length}`,
-              color: `#DDDDDD`,
-            },
-            avatar: {
-              image: pp,
-              outlineWidth: 5,
-              outlineColor: new LinearGradient([0, "#33f"], [1, "#f33"]),
-            },
-            background:
-              "https://p4.wallpaperbetter.com/wallpaper/659/538/534/anime-girls-black-rock-shooter-anime-wallpaper-preview.jpg",
-            blur: 1,
-            border: true,
-            rounded: true,
-          });
-
-          let lea = await drawCard({
-            theme: "code",
-            text: {
-              title: await this.getName(id),
-              text: await this.getName(user),
-              subtitle: `Anggota ke-${groupMetadata.participants.length}`,
-              color: `#DDDDDD`,
-            },
-            avatar: {
-              image: pp,
-              outlineWidth: 5,
-              outlineColor: new LinearGradient([0, "#33f"], [1, "#f33"]),
-            },
-            background:
-              "https://p4.wallpaperbetter.com/wallpaper/659/538/534/anime-girls-black-rock-shooter-anime-wallpaper-preview.jpg",
-            blur: 1,
-            border: true,
-            rounded: true,
-          });
-
-          this.sendFile(
-            id,
-            action === "add" ? wel : lea,
-            "pp.jpg",
+          this.sendMessage(id, {
             text,
-            null,
-            false,
-            { mentions: [user] }
-          );
+            mentions: [user],
+          });
         }
       }
       break;

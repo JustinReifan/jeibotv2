@@ -1,95 +1,205 @@
-// server/callback.js
+// callbackDuitku.js (ESM)
 import express from "express";
 import { createServer } from "http";
-import suntikController from "../controllers/suntikController.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import suntikController from "../controllers/suntikController.js"; // pastikan export default
+// import CONFIG from "../config.json" assert { type: "json" }; // optional jika butuh config
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.CALLBACK_PORT || 5000;
 
-// Middleware untuk parsing body
+// support x-www-form-urlencoded & JSON
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false })); // untuk x-www-form-urlencoded
 
-// Debug log untuk callback Duitku
+// DB file for credits (relative ke folder file ini)
+const CREDITS_FILE = path.join(__dirname, "..", "database", "userCredits.json");
+
+function readJson(file, def = {}) {
+  try {
+    if (!fs.existsSync(file)) return def;
+    const raw = fs.readFileSync(file, "utf8");
+    return JSON.parse(raw || "{}");
+  } catch (e) {
+    console.error("readJson err:", e);
+    return def;
+  }
+}
+function writeJson(file, data) {
+  try {
+    fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.error("writeJson err:", e);
+  }
+}
+
+// normalisasi jid: accept "4017...", "6285...", "0812...", "6285...@s.whatsapp.net", "4017...@lid"
+function ensureJid(jid) {
+  if (!jid) return jid;
+  // if already contains @
+  if (typeof jid === "string" && jid.includes("@")) {
+    const userPart = String(jid).split("@")[0].replace(/\D/g, "");
+    if (!userPart) return jid;
+    // if looks like indonesia international
+    if (/^62\d{7,}$/.test(userPart)) return `${userPart}@s.whatsapp.net`;
+    // if starts with 0 -> convert
+    if (/^0\d+/.test(userPart)) return `62${userPart.slice(1)}@s.whatsapp.net`;
+    // fallback use numeric userPart + s.whatsapp.net
+    return `${userPart}@s.whatsapp.net`;
+  } else {
+    // pure digits or mixed => strip non-digits
+    let d = String(jid).replace(/\D/g, "");
+    if (!d) throw new Error("Invalid phone");
+    if (d.startsWith("0")) d = "62" + d.slice(1);
+    if (!d.startsWith("62")) d = "62" + d;
+    return `${d}@s.whatsapp.net`;
+  }
+}
+
+// credit calc: profit = total * 0.5; credit = floor(profit / 1000)
+function creditsFromAmount(total) {
+  const num = Number(total) || 0;
+  const profit = num * 0.5;
+  return Math.floor(profit / 1000);
+}
+
+// shareable instance of WA (set from start file)
+let globalConn = null;
+export function setConnInstance(juna) {
+  globalConn = juna;
+}
+
+// debug middleware (optional) - log content-type and body for the callback route
 app.use((req, res, next) => {
   if (req.path === "/duitku/callback") {
-    console.log("Headers:", req.headers["content-type"]);
-    console.log("Body:", req.body);
+    console.log("[duitku callback] headers:", req.headers["content-type"]);
+    console.log("[duitku callback] body:", req.body);
   }
   next();
 });
 
-// Simpan referensi ke instance WhatsApp
-let globalConn = null;
-
-function setConnInstance(conn) {
-  globalConn = conn;
-}
-
-// Route callback untuk Duitku
 app.post("/duitku/callback", async (req, res) => {
   try {
+    // validasi socket ready
     if (!globalConn || typeof globalConn.sendMessage !== "function") {
       console.error("Socket WA belum siap");
+      // still return 200 to gateway in some cases, but use 503 here
       return res.status(503).json({ ok: false, message: "WA not ready" });
     }
 
+    // call controller to validate and process payment -> it returns structured result
     const result = await suntikController.paymentCallback(
       req.headers,
       req.body
     );
 
-    // Kirim notifikasi WA ke pembeli
-    if (result.order && result.order.buyerPhone) {
-      let status = result.order.status;
-      let orderId = result.order.orderId;
-      let layanan = result.order.serviceName;
-      let target = result.order.target;
-      let qty = result.order.qty;
-      let total = result.order.total;
+    // If payment processed and order created successfully
+    if (result && result.ok && result.type === "ordered" && result.order) {
+      const ord = result.order;
+      // determine total; fallback to tinpedResponse price if needed
+      const total =
+        Number(ord.total) ||
+        Number(ord.tinpedResponse?.data?.price) ||
+        Number(result.TinpedRes?.data?.price) ||
+        0;
+      const addCredit = creditsFromAmount(total);
 
-      let msg =
-        `⚡ *PEMBAYARAN BERHASIL!* \n` +
-        `━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `🆔 *Order ID*   : ${orderId}\n` +
-        `📌 *Layanan*    : ${layanan}\n` +
-        `🎯 *Target*     : ${target}\n` +
-        `🔢 *Jumlah*     : ${qty}\n` +
-        `💰 *Total Bayar*: Rp${Number(total).toLocaleString("id-ID")}\n\n`;
-
-      if (status === "ordered") {
-        msg +=
-          `✅ *STATUS: PEMBAYARAN SUKSES*\n` +
-          `Pesanan Anda sedang *diproses otomatis* 🚀\n\n`;
-      } else {
-        msg +=
-          `❌ *STATUS: ${status.toUpperCase()}*\n` +
-          `Hubungi admin untuk bantuan lebih lanjut ⚠️\n\n`;
+      // persist credit to DB file
+      const db = readJson(CREDITS_FILE, {});
+      const buyerRaw = ord.buyerPhone || ord.buyer || ord.buyerPhoneJid || "";
+      let buyerJid;
+      try {
+        buyerJid = ensureJid(buyerRaw);
+      } catch (e) {
+        // fallback: use buyerRaw as-is
+        buyerJid = buyerRaw;
       }
 
-      msg +=
-        `━━━━━━━━━━━━━━━━━━━━\n` +
-        `📝 Untuk cek progres pesanan:\n` +
-        `Ketik: *.ceksuntik ${orderId}*`;
+      if (!db[buyerJid]) db[buyerJid] = { credits: 0, history: [] };
+      db[buyerJid].credits = (db[buyerJid].credits || 0) + addCredit;
+      db[buyerJid].history = db[buyerJid].history || [];
+      db[buyerJid].history.push({
+        at: new Date().toISOString(),
+        orderId: ord.orderId,
+        amount: total,
+        creditsAdded: addCredit,
+      });
+      writeJson(CREDITS_FILE, db);
 
-      // kirim ke group jika ada, fallback ke buyer
-      const targetChat = result.order.groupId || result.order.buyerPhone;
-      await globalConn.sendMessage(targetChat, { text: msg });
+      // send WA notification to buyer (if instance available)
+      if (globalConn && typeof globalConn.sendMessage === "function") {
+        const buyerToSend = buyerJid;
+        const msg =
+          `⚡ *PEMBAYARAN BERHASIL*\n\n` +
+          `🆔 Order: *${ord.orderId}*\n` +
+          `📌 Layanan: *${ord.serviceName}*\n` +
+          `🎯 Target: ${ord.target}\n` +
+          `🔢 Jumlah: ${ord.qty}\n` +
+          `💰 Total Bayar: Rp${Number(total).toLocaleString("id-ID")}\n\n` +
+          `🎉 Kamu memperoleh *${addCredit} credit* dari pembelian ini.\n` +
+          `🔖 Total credit kamu sekarang: *${db[buyerJid].credits}*\n\n` +
+          `📝 Untuk memperpanjang sewa bot pakai credit: ketik .sewabot dan pilih paket\n` +
+          `🔎 Cek detail pesanan: .ceksuntik ${ord.orderId}`;
+
+        try {
+          await globalConn.sendMessage(buyerToSend, { text: msg });
+        } catch (e) {
+          console.warn("Gagal kirim WA ke buyer:", e?.message || e);
+        }
+
+        // Also notify group if order has groupId
+        if (ord.groupId) {
+          try {
+            await globalConn.sendMessage(ord.groupId, { text: msg });
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+
+      return res
+        .status(200)
+        .json({ ok: true, result, creditsAdded: addCredit });
     }
 
-    res.status(200).json({ ok: true, result });
+    // payment failed or non-ordered
+    if (result && result.type === "payment_failed") {
+      const p = result.payment;
+      try {
+        const buyerJid = ensureJid(p?.buyerPhone || p?.merchantUserId || "");
+        if (
+          globalConn &&
+          typeof globalConn.sendMessage === "function" &&
+          buyerJid
+        ) {
+          await globalConn.sendMessage(buyerJid, {
+            text: `⚠️ Pembayaran untuk Order ${p.merchantOrderId} gagal. Silakan coba lagi atau hubungi admin.`,
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // default response
+    return res.status(200).json({ ok: true, result });
   } catch (err) {
     console.error("duitku callback err", err);
-    res.status(400).json({ ok: false, error: err.message });
+    return res
+      .status(400)
+      .json({ ok: false, error: String(err?.message || err) });
   }
 });
 
 const server = createServer(app);
 
-function startCallbackServer() {
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log(`Callback server jalan di port ${PORT}`);
-  });
+export function startCallbackServer() {
+  server.listen(PORT, "0.0.0.0", () =>
+    console.log(`[callback] server ready on port ${PORT}`)
+  );
 }
-
-export { startCallbackServer, setConnInstance };

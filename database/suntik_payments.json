@@ -28,5 +28,35 @@
     },
     "status": "pending",
     "createdAt": "2025-09-12T11:14:40.763Z"
+  },
+  {
+    "orderId": "JEI-1758555235914",
+    "merchantOrderId": "JEI-1758555235914",
+    "duitkuResponse": {
+      "merchantCode": "D19869",
+      "reference": "D1986925MCYSQYHSWYZ2WMI",
+      "paymentUrl": "https://passport.duitku.com/topup/topupdirectv2.aspx?ref=SQ25YVPWE6GVQMLKQDP",
+      "qrString": "00020101021226580017ID.CO.NUSAPAY.WWW0118936008360000001642020416420303UKE51360017ID.CO.NUSAPAY.WWW020416420303UKE52044814530336054077538.005802ID5909TINPEDWEB6013JAKARTA UTARA610514450627401100EILTSZ9MX02120859310183330309TINPEDWEB0520NQ4242_0_5A8F64493A70703A0163046FF2",
+      "amount": "7538",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-09-22T15:33:57.829Z"
+  },
+  {
+    "orderId": "JEI-1758555325311",
+    "merchantOrderId": "JEI-1758555325311",
+    "duitkuResponse": {
+      "merchantCode": "D19869",
+      "reference": "D19869252CMS76AVRH3RALC",
+      "paymentUrl": "https://passport.duitku.com/topup/topupdirectv2.aspx?ref=SQ25FTLHS1OMJMINEQ7",
+      "qrString": "00020101021226580017ID.CO.NUSAPAY.WWW0118936008360000001642020416420303UKE51360017ID.CO.NUSAPAY.WWW020416420303UKE520448145303360540811984.005802ID5909TINPEDWEB6013JAKARTA UTARA610514450627401100EIIRPLOFZ02120859310183330309TINPEDWEB0520NQ4242_0_6A9B7BCF0CB0703A016304741B",
+      "amount": "11984",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-09-22T15:35:27.116Z"
   }
 ]
