@@ -60,8 +60,7 @@ let handler = async (m, { conn, text, args, usedPrefix, command }) => {
               "id-ID"
             )}\n` +
             `━━━━━━━━━━━━━━━━━━\n\n` +
-            `⚡ Silakan scan QR di atas untuk melakukan pembayaran.\n` +
-            `💷 Cek Status Transaksi ketik *${usedPrefix}ceksuntik ${ord?.orderId}*\n` +
+            `⚡ Silakan scan QR di atas untuk melakukan pembayaran.\n\n` +
             `Jika ada kendala, hubungi *Owner*.`,
         },
         { quoted: m }

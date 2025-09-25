@@ -1,1 +1,19 @@
-[]
+{
+  "6285931018333@s.whatsapp.net": {
+    "credits": 2,
+    "history": [
+      {
+        "at": "2025-09-25T13:09:25.490Z",
+        "orderId": "JEI-1758802820927",
+        "amount": 1461,
+        "creditsAdded": 0.48
+      },
+      {
+        "at": "2025-09-25T13:44:26.043Z",
+        "action": "deduct_sewa",
+        "paket": "2minggu",
+        "credits": 8
+      }
+    ]
+  }
+}

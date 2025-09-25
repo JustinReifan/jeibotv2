@@ -58,5 +58,56 @@
     },
     "status": "pending",
     "createdAt": "2025-09-22T15:35:27.116Z"
+  },
+  {
+    "orderId": "JEI-1758801939445",
+    "merchantOrderId": "JEI-1758801939445",
+    "duitkuResponse": {
+      "merchantCode": "D19869",
+      "reference": "D1986925JH43S3WVBS3PHVF",
+      "paymentUrl": "https://passport.duitku.com/topup/topupdirectv2.aspx?ref=SQ25RJHVRDDF18G145L",
+      "qrString": "00020101021226580017ID.CO.NUSAPAY.WWW0118936008360000001642020416420303UKE51360017ID.CO.NUSAPAY.WWW020416420303UKE52044814530336054071198.005802ID5909TINPEDWEB6013JAKARTA UTARA610514450627401100EIFRDTJU002120859310183330309TINPEDWEB0520NQ4242_0_E3BE4CBE0800703A016304B7CC",
+      "amount": "1198",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "paid",
+    "createdAt": "2025-09-25T12:05:41.361Z",
+    "reference": "D1986925JH43S3WVBS3PHVF",
+    "updatedAt": "2025-09-25T12:15:48.954Z"
+  },
+  {
+    "orderId": "JEI-1758802720830",
+    "merchantOrderId": "JEI-1758802720830",
+    "duitkuResponse": {
+      "merchantCode": "D19869",
+      "reference": "D1986925AJZ2SMLZD4ZHA88",
+      "paymentUrl": "https://passport.duitku.com/topup/topupdirectv2.aspx?ref=SQ25LKJV18ILG0MZBGV",
+      "qrString": "00020101021226580017ID.CO.NUSAPAY.WWW0118936008360000001642020416420303UKE51360017ID.CO.NUSAPAY.WWW020416420303UKE52044814530336054071461.005802ID5909TINPEDWEB6013JAKARTA UTARA610514450627401100EITYW4Q1F02120859310183330309TINPEDWEB0520NQ4242_0_ADFCD00DA040703A0163047C6C",
+      "amount": "1461",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "paid",
+    "createdAt": "2025-09-25T12:18:42.666Z",
+    "reference": "D1986925AJZ2SMLZD4ZHA88",
+    "updatedAt": "2025-09-25T12:19:54.799Z"
+  },
+  {
+    "orderId": "JEI-1758802820927",
+    "merchantOrderId": "JEI-1758802820927",
+    "duitkuResponse": {
+      "merchantCode": "D19869",
+      "reference": "D1986925XMAAZD6W4DOUWMS",
+      "paymentUrl": "https://passport.duitku.com/topup/topupdirectv2.aspx?ref=SQ2584O3RT0A5NY3MRE",
+      "qrString": "00020101021226580017ID.CO.NUSAPAY.WWW0118936008360000001642020416420303UKE51360017ID.CO.NUSAPAY.WWW020416420303UKE52044814530336054071461.005802ID5909TINPEDWEB6013JAKARTA UTARA610514450627401100EID9OGRWJ02120859310183330309TINPEDWEB0520NQ4242_0_4554A058D090703A0163047D8C",
+      "amount": "1461",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "paid",
+    "createdAt": "2025-09-25T12:20:22.867Z",
+    "reference": "D1986925XMAAZD6W4DOUWMS",
+    "updatedAt": "2025-09-25T13:09:24.142Z"
   }
 ]

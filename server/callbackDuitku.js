@@ -22,17 +22,29 @@ const CREDITS_FILE = path.join(__dirname, "..", "database", "userCredits.json");
 
 function readJson(file, def = {}) {
   try {
-    if (!fs.existsSync(file)) return def;
+    console.log("[DEBUG] readJson target:", file);
+    if (!fs.existsSync(file)) {
+      console.log("[DEBUG] File not found, returning default");
+      return def;
+    }
     const raw = fs.readFileSync(file, "utf8");
-    return JSON.parse(raw || "{}");
+    console.log("[DEBUG] File content:", raw);
+    const parsed = JSON.parse(raw || "{}");
+    return Array.isArray(parsed) ? {} : parsed; // 🔑 paksa object
   } catch (e) {
     console.error("readJson err:", e);
     return def;
   }
 }
+
 function writeJson(file, data) {
   try {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2));
+    console.log("[DEBUG] writeJson target:", file);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    // 🔑 pastikan data selalu object
+    const objData = Array.isArray(data) ? {} : data;
+    fs.writeFileSync(file, JSON.stringify(objData, null, 2));
+    console.log("[DEBUG] JSON saved:", objData);
   } catch (e) {
     console.error("writeJson err:", e);
   }
@@ -64,8 +76,8 @@ function ensureJid(jid) {
 // credit calc: profit = total * 0.5; credit = floor(profit / 1000)
 function creditsFromAmount(total) {
   const num = Number(total) || 0;
-  const profit = num * 0.5;
-  return Math.floor(profit / 1000);
+  const profit = num * 0.33;
+  return Number((profit / 1000).toFixed(2));
 }
 
 // shareable instance of WA (set from start file)
@@ -77,8 +89,8 @@ export function setConnInstance(juna) {
 // debug middleware (optional) - log content-type and body for the callback route
 app.use((req, res, next) => {
   if (req.path === "/duitku/callback") {
-    console.log("[duitku callback] headers:", req.headers["content-type"]);
-    console.log("[duitku callback] body:", req.body);
+    // console.log("[duitku callback] headers:", req.headers["content-type"]);
+    // console.log("[duitku callback] body:", req.body);
   }
   next();
 });
@@ -101,6 +113,8 @@ app.post("/duitku/callback", async (req, res) => {
     // If payment processed and order created successfully
     if (result && result.ok && result.type === "ordered" && result.order) {
       const ord = result.order;
+      console.log("Order processed:", ord);
+
       // determine total; fallback to tinpedResponse price if needed
       const total =
         Number(ord.total) ||
@@ -121,7 +135,9 @@ app.post("/duitku/callback", async (req, res) => {
       }
 
       if (!db[buyerJid]) db[buyerJid] = { credits: 0, history: [] };
-      db[buyerJid].credits = (db[buyerJid].credits || 0) + addCredit;
+      db[buyerJid].credits = Number(
+        ((db[buyerJid].credits || 0) + addCredit).toFixed(2)
+      );
       db[buyerJid].history = db[buyerJid].history || [];
       db[buyerJid].history.push({
         at: new Date().toISOString(),
@@ -146,11 +162,11 @@ app.post("/duitku/callback", async (req, res) => {
           `📝 Untuk memperpanjang sewa bot pakai credit: ketik .sewabot dan pilih paket\n` +
           `🔎 Cek detail pesanan: .ceksuntik ${ord.orderId}`;
 
-        try {
-          await globalConn.sendMessage(buyerToSend, { text: msg });
-        } catch (e) {
-          console.warn("Gagal kirim WA ke buyer:", e?.message || e);
-        }
+        // try {
+        //   await globalConn.sendMessage(buyerToSend, { text: msg });
+        // } catch (e) {
+        //   console.warn("Gagal kirim WA ke buyer:", e?.message || e);
+        // }
 
         // Also notify group if order has groupId
         if (ord.groupId) {

@@ -379,6 +379,44 @@ global.reloadHandler = async function (restatConn) {
   return true;
 };
 
+// Cek masa sewa tiap 5 menit
+setInterval(async () => {
+  console.log("Checking sewa group status...");
+  if (!global.db?.data?.chats) return;
+  const now = Date.now();
+
+  for (const [jid, chat] of Object.entries(global.db.data.chats)) {
+    if (!jid.endsWith("@g.us")) continue; // cuma group
+    if (!chat.expired || chat.expired === 0) continue;
+
+    const remaining = chat.expired - now;
+
+    // Expired
+    if (remaining <= 0) {
+      try {
+        await conn.sendMessage(jid, {
+          text: "⏰ Masa sewa bot di grup ini sudah *berakhir*. Bot akan keluar otomatis. Terima kasih sudah menggunakan layanan kami 🙏",
+        });
+        await conn.groupLeave(jid);
+        chat.expired = 0; // reset
+      } catch (e) {
+        console.error("Gagal leave group:", e);
+      }
+    }
+    // Reminder 24 jam sebelum expired
+    else if (remaining <= 24 * 60 * 60 * 1000 && !chat.reminded) {
+      try {
+        await conn.sendMessage(jid, {
+          text: "⚠️ Masa sewa bot di grup ini tersisa kurang dari *24 jam*.\nSegera perpanjang dengan command *.sewabot* agar bot tidak keluar otomatis.",
+        });
+        chat.reminded = true; // tandai sudah reminder
+      } catch (e) {
+        console.error("Gagal kirim reminder:", e);
+      }
+    }
+  }
+}, 10 * 60 * 1000); // cek tiap 5 menit
+
 const pluginFolder = global.__dirname(join(__dirname, "./plugins/index"));
 const pluginFilter = (filename) => /\.js$/.test(filename);
 global.plugins = {};

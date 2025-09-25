@@ -180,12 +180,14 @@ async function paymentCallback(headers, body) {
 
     try {
       const TinpedRes = await Tinped.createOrder(
-        global.Tinped_id,
-        global.Tinped_key,
+        global.tinped_id,
+        global.tinped_key,
         ord.serviceId,
         ord.target,
         ord.qty
       );
+      console.log("Tinped order response:", TinpedRes);
+
       ord.status = TinpedRes.status ? "ordered" : "order_failed";
       ord.TinpedResponse = TinpedRes;
       ord.updatedAt = new Date().toISOString();

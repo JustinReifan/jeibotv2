@@ -1,4 +1,5 @@
 import fs from "fs";
+import { getCredits } from "../lib/creditDb.js";
 
 let handler = async (m, { conn, usedPrefix: _p, args }) => {
   try {
@@ -29,17 +30,19 @@ let handler = async (m, { conn, usedPrefix: _p, args }) => {
       : isPremium
       ? getRemainingTime(userData.premiumTime - Date.now())
       : "-";
+    const credits = getCredits(m.sender);
 
     const { tanggal, waktu } = waktuJakarta();
 
     let menuUser = `
-┏━━ ⪩  *INFO PENGGUNA*  ⪨
+┏━━  *INFO PENGGUNA*  
 ┃ ⬡ Nama    : ${nama}
 ┃ ⬡ Status  : ${status}
 ┃ ⬡ Koin    : ${koin}
 ┃ ⬡ Limit   : ${limit}
+┃ ⬡ Credit  : ${credits}
 ┃ ⬡ Premium : ${sisaPremium}
-┗━━━━━━━━━━━━━━━⟢
+┗━━━━━━━━━━━━━━━
 `.trim();
 
     let help = Object.values(global.plugins)
@@ -168,7 +171,7 @@ _${global.namebot} V2.0_
       },
       {
         title: "Sewa bot",
-        description: "Info paket sewa bot",
+        description: "Info paket sewa/perpanjang bot",
         id: `${_p}sewabot`,
       },
     ];
